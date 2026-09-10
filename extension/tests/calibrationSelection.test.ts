@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import {
   activateCalibrationSelection,
+  finishCalibrationSelection,
   resolveCalibrationAnchor,
 } from "../src/calibrationSelection";
 
@@ -20,6 +21,21 @@ it("activates the Letopis tool before activating calibration mode", async () => 
   expect(calls).toEqual([
     "tool:ru.letopis.map/tool",
     "mode:ru.letopis.map/tool:ru.letopis.map/calibration",
+  ]);
+});
+
+it("returns to coordinate mode after one calibration click", async () => {
+  const calls: string[] = [];
+  const tool = {
+    async activateMode(toolId: string, modeId: string) {
+      calls.push(`mode:${toolId}:${modeId}`);
+    },
+  };
+
+  await finishCalibrationSelection(tool);
+
+  expect(calls).toEqual([
+    "mode:ru.letopis.map/tool:ru.letopis.map/coordinates",
   ]);
 });
 
