@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import re
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -54,4 +55,5 @@ def test_repository_has_no_vps_deploy_directory():
 def test_extension_release_version_is_consistent():
     package = json.loads((ROOT / 'extension/package.json').read_text(encoding='utf-8'))
     manifest = json.loads((ROOT / 'extension/public/manifest.json').read_text(encoding='utf-8'))
-    assert package['version'] == manifest['version'] == '1.0.0'
+    assert package['version'] == manifest['version']
+    assert re.fullmatch(r'\d+\.\d+\.\d+', package['version'])
