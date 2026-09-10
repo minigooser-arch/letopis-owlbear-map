@@ -9,6 +9,7 @@ import {
 import { defaultMapBaseUrl, ITEM_METADATA_KEY } from "./constants";
 import { getSceneState, setSceneState } from "./calibration";
 import { tilePlacement } from "./placement";
+import { canSyncMap } from "./roleAccess";
 import { planSync } from "./syncPlan";
 
 export type SyncResult = {
@@ -93,7 +94,7 @@ export async function syncCurrentRevision(): Promise<SyncResult> {
   if (!(await OBR.scene.isReady())) {
     throw new Error("Сцена Owlbear ещё не готова");
   }
-  if ((await OBR.player.getRole()) !== "GM") {
+  if (!canSyncMap(await OBR.player.getRole())) {
     throw new Error("Синхронизация карты доступна только GM");
   }
 
