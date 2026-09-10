@@ -1,10 +1,10 @@
 {
   "name": "Летопись: карта Minecraft",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "manifest_version": 1,
   "description": "Синхронизация карты Летописи и координат Minecraft в Owlbear Rodeo.",
-  "icon": "./icon.svg",
-  "background_url": "./background.html",
+  "icon": "https://minigooser-arch.github.io/letopis-owlbear-map/icon.svg",
+  "background_url": "https://minigooser-arch.github.io/letopis-owlbear-map/background.html",
   "permissions": [
     {
       "name": "clipboard-write",
@@ -13,8 +13,8 @@
   ],
   "action": {
     "title": "Карта Minecraft",
-    "icon": "./icon.svg",
-    "popover": "./index.html",
+    "icon": "https://minigooser-arch.github.io/letopis-owlbear-map/icon.svg",
+    "popover": "https://minigooser-arch.github.io/letopis-owlbear-map/index.html",
     "height": 520,
     "width": 360
   }
