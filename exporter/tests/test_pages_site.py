@@ -2,10 +2,22 @@ from pathlib import Path
 import json, subprocess
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[2]
+PAGES_BASE='https://minigooser-arch.github.io/letopis-owlbear-map/'
 
 def test_assemble_and_verify_pages_site(tmp_path):
     ext=tmp_path/'dist'; ext.mkdir();
-    (ext/'manifest.json').write_text(json.dumps({'name':'x','version':'1','manifest_version':1,'icon':'./icon.svg','background_url':'./background.html','action':{'title':'x','icon':'./icon.svg','popover':'./index.html'}}))
+    (ext/'manifest.json').write_text(json.dumps({
+        'name':'x',
+        'version':'1',
+        'manifest_version':1,
+        'icon':f'{PAGES_BASE}icon.svg',
+        'background_url':f'{PAGES_BASE}background.html',
+        'action':{
+            'title':'x',
+            'icon':f'{PAGES_BASE}icon.svg',
+            'popover':f'{PAGES_BASE}index.html',
+        },
+    }))
     for name in ['icon.svg','background.html','index.html']:(ext/name).write_text('x')
     mapdir=tmp_path/'map'; tiles=mapdir/'tiles'; tiles.mkdir(parents=True)
     revision=9; mt=[]
