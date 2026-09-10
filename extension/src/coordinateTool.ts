@@ -1,4 +1,4 @@
-import OBR, { buildLabel } from "@owlbear-rodeo/sdk";
+import OBR, { buildLabel, type Label } from "@owlbear-rodeo/sdk";
 import { COORDINATE_MODE_ID, COPY_COORDS_ACTION_ID, COPY_TP_ACTION_ID, LETOPIS_TOOL_ID, extensionAssetUrl } from "./constants";
 import { getSceneState } from "./calibration";
 import { sceneToMinecraft, type MinecraftCursor } from "./coordinates";
@@ -23,7 +23,7 @@ async function showCoordinate(position: {x:number;y:number}, coordinate: Minecra
     await OBR.scene.local.addItems([item]);
     labelId = item.id;
   } else {
-    await OBR.scene.local.updateItems([labelId], items => {
+    await OBR.scene.local.updateItems<Label>([labelId], items => {
       const item = items[0]; if (!item || item.type !== "LABEL") return;
       item.text.plainText = text;
       item.position = { x: position.x + 18, y: position.y + 18 };
