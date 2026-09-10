@@ -1,6 +1,7 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { getSceneState } from "./calibration";
 import { activateCalibrationSelection } from "./calibrationSelection";
+import { formatUnknownError } from "./errorMessage";
 import { canCalibrateMap, canSyncMap } from "./roleAccess";
 import { syncCurrentRevision } from "./sync";
 import "./style.css";
@@ -44,7 +45,7 @@ OBR.onReady(async () => {
         "Кликните внутри нужной клетки. Её верхний левый угол станет точкой Minecraft 0, -10000.",
       );
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = formatUnknownError(error);
       await setStatus(message, true);
       await OBR.notification.show(message, "ERROR");
     }
@@ -60,7 +61,7 @@ OBR.onReady(async () => {
       );
       await render();
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = formatUnknownError(error);
       await setStatus(message, true);
       await OBR.notification.show(message, "ERROR");
     }

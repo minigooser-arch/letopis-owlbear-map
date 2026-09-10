@@ -8,6 +8,10 @@ import {
 } from "./contracts";
 import { defaultMapBaseUrl, ITEM_METADATA_KEY } from "./constants";
 import { getSceneState, setSceneState } from "./calibration";
+import {
+  applyMapImageUpdates,
+  type MutableMapImage,
+} from "./mapUpdateBatch";
 import { tilePlacement } from "./placement";
 import { canSyncMap } from "./roleAccess";
 import { planSync } from "./syncPlan";
@@ -124,8 +128,10 @@ export async function syncCurrentRevision(): Promise<SyncResult> {
 
   // Reaching this point means either a new map revision exists or the GM
   // deliberately cleared appliedRevision by recalibrating the anchor. In both
-  // cases existing owned images must be rebuilt so their URL and/or position
-  // matches the current scene state.
+  // cases every existing owned image must be rebuilt to the same anchor and
+  // revision. Updating them one request at a time can leave half the map at an
+  // old anchor if Owlbear rejects a later request, so existing tiles are sent
+  // in one scene update instead.
   const plan = planSync(
     items as unknown as Array<{
       id: string;
@@ -139,37 +145,30 @@ export async function syncCurrentRevision(): Promise<SyncResult> {
   const creates = plan.create.map((tile) =>
     buildMapImage(tile, manifest, state.anchor!, gridDpi),
   );
-  if (creates.length) {
-    await OBR.scene.items.addItems(creates);
-  }
 
-  for (const change of plan.update) {
-    const replacement = buildMapImage(
+  const replacements = plan.update.map((change) => ({
+    itemId: change.item.id,
+    replacement: buildMapImage(
       change.tile,
       manifest,
-      state.anchor,
+      state.anchor!,
       gridDpi,
+    ) as unknown as MutableMapImage,
+  }));
+
+  if (replacements.length) {
+    await applyMapImageUpdates(
+      async (ids, update) => {
+        await OBR.scene.items.updateItems<Image>(ids, (draft) => {
+          update(draft as unknown as MutableMapImage[]);
+        });
+      },
+      replacements,
     );
-    await OBR.scene.items.updateItems<Image>([change.item.id], (draft) => {
-      const item = draft[0];
-      if (!item || item.type !== "IMAGE") return;
-      const source = replacement as Image;
-      item.name = source.name;
-      item.position = source.position;
-      item.scale = source.scale;
-      item.layer = "MAP";
-      item.locked = true;
-      item.disableHit = true;
-      item.metadata = {
-        ...item.metadata,
-        [ITEM_METADATA_KEY]: {
-          tileId: change.tile.id,
-          revision: manifest.revision,
-        },
-      };
-      item.image = source.image;
-      item.grid = source.grid;
-    });
+  }
+
+  if (creates.length) {
+    await OBR.scene.items.addItems(creates);
   }
 
   if (plan.delete.length) {
