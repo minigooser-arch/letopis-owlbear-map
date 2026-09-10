@@ -1,0 +1,126 @@
+name: Build map and deploy Pages
+
+"on":
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 3 */3 * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: letopis-map-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.13"
+
+      - name: Install exporter
+        run: python -m pip install -e "./exporter[test]"
+
+      - name: Test exporter
+        run: pytest exporter/tests -q
+
+      - name: Download BlueMap and build strategic map
+        shell: bash
+        run: |
+          set -euo pipefail
+          revision=$((GITHUB_RUN_NUMBER * 100 + GITHUB_RUN_ATTEMPT))
+          letopis-map-export --config exporter/config.example.yml build --output build/map --revision "$revision"
+
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+
+      - name: Install extension dependencies
+        working-directory: extension
+        run: npm install --no-audit --no-fund
+
+      - name: Test extension
+        working-directory: extension
+        run: npm run test:run
+
+      - name: Build extension
+        working-directory: extension
+        run: npm run build
+
+      - name: Assemble GitHub Pages site
+        run: ./scripts/assemble-pages.sh extension/dist build/map build/site
+
+      - name: Verify complete Pages site
+        run: python scripts/verify-pages.py build/site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: build/site
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+
+      - name: Verify deployed CORS for Owlbear images
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="${{ steps.deployment.outputs.page_url }}"
+          url="${base%/}/map/tiles/x_0_z_0.png"
+          headers="$(curl -fsSI -H 'Origin: https://www.owlbear.rodeo' "$url")"
+          printf '%s\n' "$headers"
+          grep -qiE '^access-control-allow-origin:[[:space:]]*\*' <<<"$headers"
+
+  keepalive:
+    name: Keep scheduled workflow active
+    needs: deploy
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Refresh monthly repository activity marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          day="$(date -u +%d)"
+          if ((10#$day > 3)); then
+            echo "Monthly keepalive not due (UTC day $day)."
+            exit 0
+          fi
+          printf 'Last successful scheduled map refresh: %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > .map-sync-last-success
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .map-sync-last-success
+          git commit -m "chore: keep scheduled map refresh active"
+          git push origin HEAD:main

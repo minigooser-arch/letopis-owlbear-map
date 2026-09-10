@@ -1,0 +1,21 @@
+{
+  "name": "Летопись: карта Minecraft",
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "description": "Синхронизация карты Летописи и координат Minecraft в Owlbear Rodeo.",
+  "icon": "./icon.svg",
+  "background_url": "./background.html",
+  "permissions": [
+    {
+      "name": "clipboard-write",
+      "reason": "Копирование Minecraft X/Z и команды /tp"
+    }
+  ],
+  "action": {
+    "title": "Карта Minecraft",
+    "icon": "./icon.svg",
+    "popover": "./index.html",
+    "height": 520,
+    "width": 360
+  }
+}

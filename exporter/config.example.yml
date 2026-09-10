@@ -1,0 +1,23 @@
+bluemap:
+  baseUrl: https://map.letopisrp.ru/maps/world/tiles/1
+  map: world
+  lod: 1
+  sourceTileBlocks: 500
+  timeoutSeconds: 15
+  retries: 3
+  workers: 12
+border:
+  source: corners
+  minX: -5760
+  maxXExclusive: 12640
+  minZ: -16720
+  maxZExclusive: -6960
+minecraftGrid:
+  chunksPerCell: 10
+  blocksPerCell: 160
+  anchorX: 0
+  anchorZ: -10000
+  anchorCorner: upper-right
+export:
+  blocksPerTile: 4000
+  blocksPerPixel: 2
