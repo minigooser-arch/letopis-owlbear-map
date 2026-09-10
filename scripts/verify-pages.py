@@ -4,6 +4,7 @@ import json, sys
 from pathlib import Path
 from PIL import Image
 EXPECTED_BORDER={"minX":-5760,"maxXExclusive":12640,"minZ":-16720,"maxZExclusive":-6960}
+PAGES_BASE="https://minigooser-arch.github.io/letopis-owlbear-map/"
 
 def fail(msg:str)->None: raise SystemExit(msg)
 def main(root:Path)->None:
@@ -12,10 +13,15 @@ def main(root:Path)->None:
         if not p.is_file(): fail(f'missing {p}')
     em=json.loads(ext.read_text(encoding='utf-8'))
     if em.get('manifest_version')!=1: fail('invalid Owlbear manifest_version')
-    for key in ('icon','background_url'):
-        if not isinstance(em.get(key),str) or not em[key].startswith('./'): fail(f'Owlbear {key} must be Pages-relative')
+    expected_urls={
+        'icon': f'{PAGES_BASE}icon.svg',
+        'background_url': f'{PAGES_BASE}background.html',
+    }
+    for key, expected in expected_urls.items():
+        if em.get(key)!=expected: fail(f'Owlbear {key} must be {expected}')
     action=em.get('action',{})
-    if not str(action.get('popover','')).startswith('./'): fail('Owlbear action.popover must be Pages-relative')
+    if action.get('icon')!=f'{PAGES_BASE}icon.svg': fail('Owlbear action.icon must use the published Pages URL')
+    if action.get('popover')!=f'{PAGES_BASE}index.html': fail('Owlbear action.popover must use the published Pages URL')
     cur=json.loads(current.read_text()); m=json.loads(manifest_path.read_text())
     if cur.get('revision')!=m.get('revision') or not isinstance(cur.get('revision'),int) or cur['revision']<1: fail('map revisions do not match')
     if m.get('border')!=EXPECTED_BORDER: fail(f"wrong map border: {m.get('border')}")
