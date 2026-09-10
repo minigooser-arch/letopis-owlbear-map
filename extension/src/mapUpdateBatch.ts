@@ -47,7 +47,7 @@ export async function applyMapImageUpdates<T extends MutableMapImage>(
       item.layer = replacement.layer;
       item.locked = replacement.locked;
       item.disableHit = replacement.disableHit;
-      item.metadata = replacement.metadata;
+      item.metadata = { ...item.metadata, ...replacement.metadata };
       item.image = replacement.image;
       item.grid = replacement.grid;
       seen.add(item.id);
