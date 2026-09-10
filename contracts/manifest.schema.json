@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "revision",
+    "map",
+    "grid",
+    "render",
+    "border",
+    "tiles"
+  ],
+  "properties": {
+    "revision": {"type":"integer","minimum":1},
+    "map": {"type":"string","minLength":1},
+    "grid": {"type":"object","additionalProperties":false,"required":["chunksPerCell","blocksPerCell","anchorMinecraftX","anchorMinecraftZ","anchorCorner"],"properties":{"chunksPerCell":{"type":"integer","const":10},"blocksPerCell":{"type":"integer","const":160},"anchorMinecraftX":{"type":"integer"},"anchorMinecraftZ":{"type":"integer"},"anchorCorner":{"type":"string","const":"upper-right"}}},
+    "render": {"type":"object","additionalProperties":false,"required":["blocksPerTile","blocksPerPixel"],"properties":{"blocksPerTile":{"type":"integer","const":4000},"blocksPerPixel":{"type":"integer","enum":[1,2]}}},
+    "tiles": {"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","gx","gz","minX","maxXExclusive","minZ","maxZExclusive","pixelWidth","pixelHeight","url"],"properties":{"id":{"type":"string","pattern":"^x_-?[0-9]+_z_-?[0-9]+$"},"gx":{"type":"integer"},"gz":{"type":"integer"},"minX":{"type":"integer"},"maxXExclusive":{"type":"integer"},"minZ":{"type":"integer"},"maxZExclusive":{"type":"integer"},"pixelWidth":{"type":"integer","minimum":1},"pixelHeight":{"type":"integer","minimum":1},"url":{"type":"string","pattern":"^tiles/.+\\.png\\?v=[0-9]+$"}}}},
+    "border": {"type":"object","additionalProperties":false,"required":["minX","maxXExclusive","minZ","maxZExclusive"],"properties":{"minX":{"type":"integer"},"maxXExclusive":{"type":"integer"},"minZ":{"type":"integer"},"maxZExclusive":{"type":"integer"}}}
+  }
+}
