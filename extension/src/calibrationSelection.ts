@@ -1,13 +1,17 @@
 import {
   CALIBRATION_MODE_ID,
+  COORDINATE_MODE_ID,
   LETOPIS_TOOL_ID,
 } from "./constants";
 
 export type Vec2 = { x: number; y: number };
 
-type CalibrationToolApi = {
-  activateTool(id: string): Promise<void>;
+type CalibrationModeApi = {
   activateMode(toolId: string, modeId: string): Promise<void>;
+};
+
+type CalibrationToolApi = CalibrationModeApi & {
+  activateTool(id: string): Promise<void>;
 };
 
 type CalibrationGridApi = {
@@ -25,6 +29,12 @@ export async function activateCalibrationSelection(
 ): Promise<void> {
   await tool.activateTool(LETOPIS_TOOL_ID);
   await tool.activateMode(LETOPIS_TOOL_ID, CALIBRATION_MODE_ID);
+}
+
+export async function finishCalibrationSelection(
+  tool: CalibrationModeApi,
+): Promise<void> {
+  await tool.activateMode(LETOPIS_TOOL_ID, COORDINATE_MODE_ID);
 }
 
 export async function resolveCalibrationAnchor(
